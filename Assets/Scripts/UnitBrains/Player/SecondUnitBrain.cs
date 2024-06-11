@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using Model;
 using Model.Runtime.Projectiles;
 using UnityEngine;
+using Utilities;
 
 namespace UnitBrains.Player
 {
@@ -12,7 +15,9 @@ namespace UnitBrains.Player
         private float _temperature = 0f;
         private float _cooldownTime = 0f;
         private bool _overheated;
-        
+
+        private List<Vector2Int> _enemyOutOfRange = new List<Vector2Int>(); //List for save Dangerous Units.
+
         protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
         {
             float overheatTemperature = OverheatTemperature;
@@ -30,7 +35,7 @@ namespace UnitBrains.Player
                 {
                     var projectile = CreateProjectile(forTarget);
                     AddProjectileToList(projectile, intoList);
-                    Debug.Log(_temperature + 1);
+                    //Debug.Log(_temperature + 1);
                 }
                 IncreaseTemperature();
             }
@@ -39,7 +44,10 @@ namespace UnitBrains.Player
 
         public override Vector2Int GetNextStep()
         {
-            return base.GetNextStep();
+            Vector2Int target = Vector2Int.zero;
+            target = _enemyOutOfRange.Any() ? _enemyOutOfRange[0] : unit.Pos;
+
+            return IsTargetInRange(target) ? unit.Pos : unit.Pos.CalcNextStepTowards(target);
         }
 
         protected override List<Vector2Int> SelectTargets()
@@ -47,11 +55,43 @@ namespace UnitBrains.Player
             ///////////////////////////////////////
             // Homework 1.4 (1st block, 4rd module)
             ///////////////////////////////////////
-            List<Vector2Int> result = GetReachableTargets();
-            Vector2Int closestTarget = Vector2Int.zero;
+            List<Vector2Int> result = new List<Vector2Int>(GetAllTargets());
+            _enemyOutOfRange.Clear();
+
+            if (result.Count > 0)
+            {
+                Vector2Int closestTarget = new Vector2Int();
+                float closestDistance = float.MaxValue;
+                
+                foreach (var r in result)
+                {
+                    float distance = DistanceToOwnBase(r);
+
+                    if (distance < closestDistance)
+                    {
+                        closestDistance = distance;
+                        closestTarget = r;
+                    }
+                }
+                
+                _enemyOutOfRange.Add(closestTarget);
+
+                if (IsTargetInRange(closestTarget))
+                {
+                    result.Add(closestTarget);
+                }
+            }
+
+            else
+            {
+                result.Add(runtimeModel.RoMap.Bases[IsPlayerUnitBrain ? RuntimeModel.BotPlayerId : RuntimeModel.PlayerId]);
+            }
+
+            return result;
+            /*Vector2Int closestTarget = Vector2Int.zero;
             
             float closestDistance = float.MaxValue;
-            
+
             foreach (var r in result)
             {
                 float distance = DistanceToOwnBase(r);
@@ -69,8 +109,8 @@ namespace UnitBrains.Player
                 if (closestDistance < float.MaxValue)
                     result.Add(closestTarget);
                 result.RemoveAt(result.Count - 1);
-            }
-            return result;
+            }*/
+            //return result;
             ///////////////////////////////////////
         }
 
