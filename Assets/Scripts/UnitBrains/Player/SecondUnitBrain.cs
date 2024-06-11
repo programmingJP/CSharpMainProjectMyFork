@@ -16,6 +16,10 @@ namespace UnitBrains.Player
         private float _cooldownTime = 0f;
         private bool _overheated;
 
+        private static int _enemyUnitCounter = 0;
+        private int _enemyUnitNumber;
+        private const int _maxEnemyInTarget = 3;
+
         private List<Vector2Int> _enemyOutOfRange = new List<Vector2Int>(); //List for save Dangerous Units.
 
         protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
@@ -56,61 +60,51 @@ namespace UnitBrains.Player
             // Homework 1.4 (1st block, 4rd module)
             ///////////////////////////////////////
             List<Vector2Int> result = new List<Vector2Int>(GetAllTargets());
+            
+            Vector2Int targetPosition;
+
             _enemyOutOfRange.Clear();
 
-            if (result.Count > 0)
+            foreach (Vector2Int target in GetAllTargets())
             {
-                Vector2Int closestTarget = new Vector2Int();
-                float closestDistance = float.MaxValue;
-                
-                foreach (var r in result)
-                {
-                    float distance = DistanceToOwnBase(r);
-
-                    if (distance < closestDistance)
-                    {
-                        closestDistance = distance;
-                        closestTarget = r;
-                    }
-                }
-                
-                _enemyOutOfRange.Add(closestTarget);
-
-                if (IsTargetInRange(closestTarget))
-                {
-                    result.Add(closestTarget);
-                }
+                _enemyOutOfRange.Add(target);
             }
 
+            if (_enemyOutOfRange.Count == 0)
+            {
+                result.RemoveAt(result.Count - 1);
+                int enemyBaseId = IsPlayerUnitBrain ? RuntimeModel.BotPlayerId : RuntimeModel.PlayerId;
+                Vector2Int enemyBase = runtimeModel.RoMap.Bases[enemyBaseId];
+                _enemyOutOfRange.Add(enemyBase);
+            }
             else
             {
-                result.Add(runtimeModel.RoMap.Bases[IsPlayerUnitBrain ? RuntimeModel.BotPlayerId : RuntimeModel.PlayerId]);
+                SortByDistanceToOwnBase(_enemyOutOfRange);
+
+                int targetIndex = _enemyUnitNumber % _maxEnemyInTarget;
+
+                if (targetIndex > (_enemyOutOfRange.Count - 1))
+                {
+                    targetPosition = _enemyOutOfRange[0];
+                }
+                else
+                {
+                    if (targetIndex == 0)
+                    {
+                        targetPosition = _enemyOutOfRange[targetIndex];
+                    }
+                    else
+                    {
+                        targetPosition = _enemyOutOfRange[targetIndex - 1];
+                    }
+
+                }
+
+                if (IsTargetInRange(targetPosition))
+                    result.Add(targetPosition);
             }
 
             return result;
-            /*Vector2Int closestTarget = Vector2Int.zero;
-            
-            float closestDistance = float.MaxValue;
-
-            foreach (var r in result)
-            {
-                float distance = DistanceToOwnBase(r);
-
-                if (distance < closestDistance)
-                {
-                    closestDistance = distance;
-                    closestTarget = r;
-                }
-            }
-
-            while (result.Count > 1)
-            {
-                result.Clear();
-                if (closestDistance < float.MaxValue)
-                    result.Add(closestTarget);
-                result.RemoveAt(result.Count - 1);
-            }*/
-            //return result;
             ///////////////////////////////////////
         }
 
