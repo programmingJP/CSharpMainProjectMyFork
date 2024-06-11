@@ -50,7 +50,7 @@ namespace UnitBrains.Player
             List<Vector2Int> result = GetReachableTargets();
             Vector2Int closestTarget = Vector2Int.zero;
             
-            int closestDistance = int.MaxValue;
+            float closestDistance = float.MaxValue;
             
             foreach (var r in result)
             {
@@ -58,7 +58,7 @@ namespace UnitBrains.Player
 
                 if (distance < closestDistance)
                 {
-                    closestDistance = (int)distance;
+                    closestDistance = distance;
                     closestTarget = r;
                 }
             }
@@ -66,7 +66,8 @@ namespace UnitBrains.Player
             while (result.Count > 1)
             {
                 result.Clear();
-                result.Add(closestTarget);
+                if (closestDistance < float.MaxValue)
+                    result.Add(closestTarget);
                 result.RemoveAt(result.Count - 1);
             }
             return result;
