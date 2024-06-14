@@ -65,6 +65,8 @@ namespace UnitBrains.Player
             ///////////////////////////////////////
             // Homework 1.4 (1st block, 4rd module)
             ///////////////////////////////////////
+            ///
+            /// ZADANIE PRIDYMAL KONCHENNIY DAUN
             List<Vector2Int> result = new List<Vector2Int>(); // Пустой список для хранения целей.
             _currentTarget.Clear(); // Очищаем список текущих целей.
 
@@ -94,8 +96,7 @@ namespace UnitBrains.Player
             return result;
             ///////////////////////////////////////
         }
-        //PARASHNOE ZADANIE
-        
+
 
         private int GetTemperature()
         {
