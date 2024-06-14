@@ -1,6 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using Model;
 using Model.Runtime.Projectiles;
 using UnityEngine;
+using Utilities;
+using Vector2Int = UnityEngine.Vector2Int;
 
 namespace UnitBrains.Player
 {
@@ -13,6 +17,19 @@ namespace UnitBrains.Player
         private float _cooldownTime = 0f;
         private bool _overheated;
         
+        public static int UnitID = 0; // Счетчик юниток
+        public int UnitNumber; // Номер юнита который равен айди с инкрементом
+        public int MaximumTargets = 3; // Максимальное количество целей
+        
+        private readonly List<Vector2Int> _currentTarget = new();
+        private List<Vector2Int> _enemiesNotInRange = new List<Vector2Int>();
+
+
+        public SecondUnitBrain()
+        {
+            UnitNumber = UnitID;
+            UnitID++;
+        }
         protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
         {
             float overheatTemperature = OverheatTemperature;
@@ -39,7 +56,9 @@ namespace UnitBrains.Player
 
         public override Vector2Int GetNextStep()
         {
-            return base.GetNextStep();
+            Vector2Int targetPosition;
+            targetPosition = _currentTarget.Count > 0 ? _currentTarget[0] : unit.Pos;
+            return IsTargetInRange(targetPosition) ? unit.Pos : unit.Pos.CalcNextStepTowards(targetPosition);
         }
 
         protected override List<Vector2Int> SelectTargets()
@@ -47,47 +66,36 @@ namespace UnitBrains.Player
             ///////////////////////////////////////
             // Homework 1.4 (1st block, 4rd module)
             ///////////////////////////////////////
-            List<Vector2Int> result = GetReachableTargets();
-            Vector2Int closestTarget = Vector2Int.zero;
-            
-            float closestDistance = float.MaxValue;
-            
-            foreach (var r in result)
-            {
-                float distance = DistanceToOwnBase(r);
+            List<Vector2Int> result = new List<Vector2Int>(); // Пустой список для хранения целей.
+            _currentTarget.Clear(); // Очищаем список текущих целей.
 
-                if (distance < closestDistance)
-                {
-                    closestDistance = distance;
-                    closestTarget = r;
-                }
+            // Проходимся по всем целям и добавляем их в очищенный список.
+            foreach (var target in GetAllTargets())
+            {
+                _currentTarget.Add(target);
             }
 
-            while (result.Count > 1)
+            // Добавляем базу противника, если список целей пуст.
+            if (_currentTarget.Count == 0)
             {
-                result.Clear();
-                if (closestDistance < float.MaxValue)
-                    result.Add(closestTarget);
-                result.RemoveAt(result.Count - 1);
+                _currentTarget.Add(runtimeModel.RoMap.Bases[IsPlayerUnitBrain ? RuntimeModel.BotPlayerId : RuntimeModel.PlayerId]);
             }
+
+            // Сортируем цели по расстоянию до вашей базы.
+            SortByDistanceToOwnBase(_currentTarget);
+
+            // Рассчитываем номер текущего юнита и определяем цель для атаки.
+            int currentUnitNumber = UnitNumber % _currentTarget.Count;
+            
+            if (_currentTarget.Count > currentUnitNumber && IsTargetInRange(_currentTarget[currentUnitNumber]))
+            {
+                result.Add(_currentTarget[currentUnitNumber]);
+            }
+
             return result;
             ///////////////////////////////////////
         }
-
-        public override void Update(float deltaTime, float time)
-        {
-            if (_overheated)
-            {              
-                _cooldownTime += Time.deltaTime;
-                float t = _cooldownTime / (OverheatCooldown/10);
-                _temperature = Mathf.Lerp(OverheatTemperature, 0, t);
-                if (t >= 1)
-                {
-                    _cooldownTime = 0;
-                    _overheated = false;
-                }
-            }
-        }
+        
 
         private int GetTemperature()
         {
