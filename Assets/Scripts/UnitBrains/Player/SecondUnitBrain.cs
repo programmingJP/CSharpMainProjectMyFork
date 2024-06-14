@@ -94,6 +94,7 @@ namespace UnitBrains.Player
             return result;
             ///////////////////////////////////////
         }
+        //PARASHNOE ZADANIE
         
 
         private int GetTemperature()
