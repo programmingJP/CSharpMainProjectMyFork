@@ -18,17 +18,11 @@ namespace UnitBrains.Player
         private bool _overheated;
         
         public static int UnitID = 0; // Счетчик юниток
-        public int UnitNumber; // Номер юнита который равен айди с инкрементом
+        public int UnitNumber = UnitID++; // Номер юнита который равен айди с инкрементом
         public int MaximumTargets = 3; // Максимальное количество целей
 
         private readonly List<Vector2Int> _currentTarget = new();
-
-
-        public SecondUnitBrain()
-        {
-            UnitNumber = UnitID;
-            UnitID++;
-        }
+        
         protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
         {
             float overheatTemperature = OverheatTemperature;
@@ -65,8 +59,6 @@ namespace UnitBrains.Player
             ///////////////////////////////////////
             // Homework 1.4 (1st block, 4rd module)
             ///////////////////////////////////////
-            ///
-            /// ZADANIE PRIDYMAL KONCHENNIY DAUN
             List<Vector2Int> result = new List<Vector2Int>(); // Пустой список для хранения целей.
             _currentTarget.Clear(); // Очищаем список текущих целей.
 
@@ -82,7 +74,7 @@ namespace UnitBrains.Player
                 _currentTarget.Add(runtimeModel.RoMap.Bases[IsPlayerUnitBrain ? RuntimeModel.BotPlayerId : RuntimeModel.PlayerId]);
             }
 
-            // Сортируем цели по расстоянию до вашей базы.
+            // Сортируем цели по расстоянию до базы.
             SortByDistanceToOwnBase(_currentTarget);
 
             // Рассчитываем номер текущего юнита и определяем цель для атаки.
