@@ -20,9 +20,8 @@ namespace UnitBrains.Player
         public static int UnitID = 0; // Счетчик юниток
         public int UnitNumber; // Номер юнита который равен айди с инкрементом
         public int MaximumTargets = 3; // Максимальное количество целей
-        
+
         private readonly List<Vector2Int> _currentTarget = new();
-        private List<Vector2Int> _enemiesNotInRange = new List<Vector2Int>();
 
 
         public SecondUnitBrain()
